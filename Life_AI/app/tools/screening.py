@@ -2,12 +2,6 @@
 from typing import List, Dict, Any
 
 def screen_molecules(molecules: List[Dict[str, Any]], filters: Dict[str, float], max_violations: int) -> tuple[List[Dict[str, Any]], Dict[str, int]]:
-    """
-    Screen molecules based on filters and return passed molecules with failure breakdown.
-
-    Returns:
-        tuple: (passed_molecules, failure_breakdown)
-    """
     passed_molecules = []
     failure_breakdown = {
         "MW_too_high": 0,
@@ -42,8 +36,8 @@ def screen_molecules(molecules: List[Dict[str, Any]], filters: Dict[str, float],
             mol_data["violation_details"] = violation_details
             passed_molecules.append(mol_data)
         else:
-            # Track failure reasons
             for detail in violation_details:
                 failure_breakdown[f"{detail}_too_high"] += 1
 
     return passed_molecules, failure_breakdown
+
