@@ -6,7 +6,6 @@ from .agents.ranker import RankerAgent
 from .tools.chemistry import sanitize_smiles, compute_properties
 from .tools.screening import screen_molecules
 
-# This would typically be a shared data store like Redis or a database
 runs = {}
 
 def execute_run(run_id: str, config: RunConfig):
@@ -30,12 +29,10 @@ def execute_run(run_id: str, config: RunConfig):
 
     for i in range(plan["rounds"]):
         run["trace"].append({"agent": "Generator", "action": f"Starting round {i+1}"})
-        
-        # Generate candidates
+
         candidates = generator.propose_candidates(plan["candidates_per_round"])
         run["trace"].append({"agent": "Generator", "action": "Proposed candidates", "count": len(candidates)})
 
-        # Process and screen molecules - ensure uniqueness
         valid_molecules = []
         seen_smiles = set()
         for smi in candidates:
@@ -48,10 +45,8 @@ def execute_run(run_id: str, config: RunConfig):
 
         run["trace"].append({"agent": "Chemistry Tool", "action": "Computed properties", "count": len(valid_molecules)})
 
-        # Screen molecules with failure breakdown
         passed_molecules, failure_breakdown = screen_molecules(valid_molecules, plan["filters"], plan["max_violations"])
 
-        # Aggregate failure breakdown
         for key in total_failure_breakdown:
             total_failure_breakdown[key] += failure_breakdown.get(key, 0)
 
@@ -64,13 +59,11 @@ def execute_run(run_id: str, config: RunConfig):
         })
         all_passed_molecules.extend(passed_molecules)
 
-    # Rank and select final candidates
     ranker = RankerAgent()
-    top_k = 10  # Or make this configurable
+    top_k = 10  
     final_results = ranker.rank_and_select(all_passed_molecules, top_k)
     run["trace"].append({"agent": "Ranker", "action": "Ranked and selected candidates", "count": len(final_results)})
 
-    # Add summary statistics
     run["summary"] = {
         "total_passed": len(all_passed_molecules),
         "total_failure_breakdown": total_failure_breakdown,
@@ -79,3 +72,4 @@ def execute_run(run_id: str, config: RunConfig):
 
     run["results"] = final_results
     run["status"] = "completed"
+
